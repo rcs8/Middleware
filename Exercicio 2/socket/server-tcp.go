@@ -35,7 +35,7 @@ func (s *ServerTCP) ListenTCP() {
 	}
 }
 
-func HandleConnectionTCP(conn net.Conn) {
+func HandleTCP(conn net.Conn) {
 	var messageFromClient shared.Args
 
 	defer conn.Close()
