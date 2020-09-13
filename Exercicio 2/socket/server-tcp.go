@@ -30,7 +30,7 @@ func (s *ServerTCP) ListenTCP() {
 			fmt.Println(err)
 		}
 
-		go HandleConnectionTCP(conn)
+		go HandleTCP(conn)
 	}
 }
 
@@ -49,7 +49,7 @@ func HandleTCP(conn net.Conn) {
 			break
 		}
 
-		msgToClient := InvokeSqrt(messageFromClient)
+		msgToClient := shared.InvokeSqrt(messageFromClient)
 
 		err = jsonEncoder.Encode(msgToClient)
 		if err != nil {

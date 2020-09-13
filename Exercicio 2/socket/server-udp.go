@@ -52,7 +52,7 @@ func HandleUDP(conn *net.UDPConn, msgFromClient []byte, n int, addr *net.UDPAddr
 		fmt.Println(err)
 	}
 
-	result := InvokeSqrt(args)
+	result := shared.InvokeSqrt(args)
 
 	msgToClient, err = json.Marshal(result)
 	if err != nil {

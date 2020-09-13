@@ -1,11 +1,11 @@
 package shared
 
 import (
-	"fmt"
 	"math"
 )
 
 func InvokeSqrt(args Args) Reply {
+	result := []float64{}
 	var a = float64(args.A)
 	var b = float64(args.B)
 	var c = float64(args.C)
@@ -14,18 +14,18 @@ func InvokeSqrt(args Args) Reply {
 
 	if deltaValue < 0 {
 		return Reply{
-			Result: "Nenhuma raiz real\n",
+			Result: result,
 		}
 	}
 
 	if deltaValue == 0 {
 		return Reply{
-			Result: fmt.Sprintf("%f\n", (b*(-1))/(2*a)),
+			Result: append(result, (b*(-1))/(2*a)),
 		}
 	}
 
 	return Reply{
-		Result: fmt.Sprintf("%f e %f\n", (math.Sqrt(deltaValue)-b)/2*a, ((-1)*math.Sqrt(deltaValue)-b)/2*a),
+		Result: append(result, (math.Sqrt(deltaValue)-b)/2*a, ((-1)*math.Sqrt(deltaValue)-b)/2*a),
 	}
 }
 
