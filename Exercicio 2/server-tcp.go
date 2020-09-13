@@ -1,19 +1,18 @@
-package socket
+package main
 
 import (
 	"encoding/json"
 	"fmt"
 	"net"
-
-	"../shared"
+	"time"
 )
 
 type ServerTCP struct {
 	listener *net.Listener
 }
 
-func NewServerTCP(port string) (*ServerTCP, error) {
-	ln, err := net.Listen("tcp", port)
+func NewServerTCP(address string) (*ServerTCP, error) {
+	ln, err := net.Listen("tcp", address)
 	if err != nil {
 		return nil, err
 	}
@@ -23,19 +22,31 @@ func NewServerTCP(port string) (*ServerTCP, error) {
 	}, err
 }
 
-func (s *ServerTCP) ListenTCP() {
+func (s *ServerTCP) ListenTCP(exit NotifChan, exited NotifChan) {
+	listener := (*s.listener).(*net.TCPListener)
 	for {
-		conn, err := (*s.listener).Accept()
+		listener.SetDeadline(time.Now().Add(1 * time.Second))
+		conn, err := listener.Accept()
 		if err != nil {
-			fmt.Println(err)
+			_, stop := <-exit
+			if stop {
+				listener.Close()
+				exited <- true
+				return
+			}
+			continue
 		}
 
 		go HandleTCP(conn)
 	}
 }
 
+func (s *ServerTCP) Close() {
+	(*s.listener).Close()
+}
+
 func HandleTCP(conn net.Conn) {
-	var messageFromClient shared.Args
+	var messageFromClient Args
 
 	defer conn.Close()
 
@@ -49,7 +60,7 @@ func HandleTCP(conn net.Conn) {
 			break
 		}
 
-		msgToClient := shared.InvokeSqrt(messageFromClient)
+		msgToClient := InvokeSqrt(messageFromClient)
 
 		err = jsonEncoder.Encode(msgToClient)
 		if err != nil {

@@ -1,7 +1,4 @@
-package shared
-
-const Iterations = 1
-const Port = 8080
+package main
 
 type Args struct {
 	A int

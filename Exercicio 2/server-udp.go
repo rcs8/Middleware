@@ -1,11 +1,11 @@
-package socket
+package main
 
 import (
 	"encoding/json"
 	"fmt"
 	"net"
-
-	"../shared"
+	"time"
+	"unsafe"
 )
 
 type ServerUDP struct {
@@ -18,7 +18,6 @@ func NewServerUDP(port string) (*ServerUDP, error) {
 		return nil, err
 	}
 
-	// Listen on udp port
 	conn, err := net.ListenUDP("udp", addr)
 	if err != nil {
 		return nil, err
@@ -29,30 +28,41 @@ func NewServerUDP(port string) (*ServerUDP, error) {
 	}, err
 }
 
-func (s *ServerUDP) ListenUDP() {
-	msgFromClient := make([]byte, 1024)
+func (s *ServerUDP) ListenUDP(exit NotifChan, exited NotifChan) {
+	var args Args
+	conn := *s.conn
 	for {
-		// Receive request
-		n, addr, err := (*s.conn).ReadFromUDP(msgFromClient)
+		conn.SetDeadline(time.Now().Add(1 * time.Second))
+		msgFromClient := make([]byte, unsafe.Sizeof(args))
+		n, addr, err := conn.ReadFromUDP(msgFromClient)
 		if err != nil {
-			fmt.Println(err)
+			_, stop := <-exit
+			if stop {
+				conn.Close()
+				exited <- true
+				return
+			}
+			continue
 		}
 
-		// Handle request
 		go HandleUDP(s.conn, msgFromClient, n, addr)
 	}
 }
 
+func (s *ServerUDP) Close() {
+	(*s.conn).Close()
+}
+
 func HandleUDP(conn *net.UDPConn, msgFromClient []byte, n int, addr *net.UDPAddr) {
 	var msgToClient []byte
-	var args shared.Args
+	var args Args
 
 	err := json.Unmarshal(msgFromClient[:n], &args)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println(string(msgFromClient[:n]), err)
 	}
 
-	result := shared.InvokeSqrt(args)
+	result := InvokeSqrt(args)
 
 	msgToClient, err = json.Marshal(result)
 	if err != nil {
@@ -63,4 +73,5 @@ func HandleUDP(conn *net.UDPConn, msgFromClient []byte, n int, addr *net.UDPAddr
 	if err != nil {
 		fmt.Println(err)
 	}
+
 }
