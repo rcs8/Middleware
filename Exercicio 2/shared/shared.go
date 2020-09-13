@@ -10,5 +10,5 @@ type Args struct {
 }
 
 type Reply struct {
-	Result float64[]
+	Result []float64
 }
