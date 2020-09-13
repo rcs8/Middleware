@@ -24,13 +24,15 @@ func NewServerTCP(port string) (*ServerTCP, error) {
 	}, err
 }
 
-func (s *ServerTCP) AccepptConnectionTCP() {
-	conn, err := (*s.listener).Accept()
-	if err != nil {
-		fmt.Println(err)
-	}
+func (s *ServerTCP) ListenTCP() {
+	for {
+		conn, err := (*s.listener).Accept()
+		if err != nil {
+			fmt.Println(err)
+		}
 
-	go HandleConnectionTCP(conn)
+		go HandleConnectionTCP(conn)
+	}
 }
 
 func HandleConnectionTCP(conn net.Conn) {
@@ -48,11 +50,7 @@ func HandleConnectionTCP(conn net.Conn) {
 			break
 		}
 
-		result := InvokeSqrt(messageFromClient)
-
-		msgToClient := shared.Reply{
-			Result: result,
-		}
+		msgToClient := InvokeSqrt(messageFromClient)
 
 		err = jsonEncoder.Encode(msgToClient)
 		if err != nil {
@@ -61,7 +59,7 @@ func HandleConnectionTCP(conn net.Conn) {
 	}
 }
 
-func InvokeSqrt(args shared.Args) string {
+func InvokeSqrt(args shared.Args) shared.Reply {
 	var a = float64(args.A)
 	var b = float64(args.B)
 	var c = float64(args.C)
@@ -69,13 +67,19 @@ func InvokeSqrt(args shared.Args) string {
 	deltaValue := CalculateDelta(a, b, c)
 
 	if deltaValue < 0 {
-		return "Nenhuma raiz real\n"
-	} else {
-		if deltaValue == 0 {
-			return fmt.Sprintf("%f\n", (b*(-1))/(2*a))
-		} else {
-			return fmt.Sprintf("%f e %f\n", (math.Sqrt(deltaValue)-b)/2*a, ((-1)*math.Sqrt(deltaValue)-b)/2*a)
+		return shared.Reply{
+			Result: "Nenhuma raiz real\n",
 		}
+	}
+
+	if deltaValue == 0 {
+		return shared.Reply{
+			Result: fmt.Sprintf("%f\n", (b*(-1))/(2*a)),
+		}
+	}
+
+	return shared.Reply{
+		Result: fmt.Sprintf("%f e %f\n", (math.Sqrt(deltaValue)-b)/2*a, ((-1)*math.Sqrt(deltaValue)-b)/2*a),
 	}
 }
 
