@@ -73,5 +73,4 @@ func HandleUDP(conn *net.UDPConn, msgFromClient []byte, n int, addr *net.UDPAddr
 	if err != nil {
 		fmt.Println(err)
 	}
-
 }
