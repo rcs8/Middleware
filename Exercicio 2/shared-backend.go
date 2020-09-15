@@ -5,7 +5,6 @@ import (
 )
 
 func InvokeSqrt(args Args) Reply {
-	result := []float64{}
 	var a = float64(args.A)
 	var b = float64(args.B)
 	var c = float64(args.C)
@@ -14,18 +13,18 @@ func InvokeSqrt(args Args) Reply {
 
 	if deltaValue < 0 {
 		return Reply{
-			Result: result,
+			Result: []float64{},
 		}
 	}
 
 	if deltaValue == 0 {
 		return Reply{
-			Result: append(result, (b*(-1))/(2*a)),
+			Result: []float64{(b * (-1)) / (2 * a)},
 		}
 	}
 
 	return Reply{
-		Result: append(result, (math.Sqrt(deltaValue)-b)/2*a, ((-1)*math.Sqrt(deltaValue)-b)/2*a),
+		Result: []float64{(math.Sqrt(deltaValue) - b) / 2 * a, ((-1)*math.Sqrt(deltaValue) - b) / 2 * a},
 	}
 }
 
