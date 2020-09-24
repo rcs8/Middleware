@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+option go_package = "/Users/viitra/Documents/Projects/Middleware/Exercicio3";
+
+package main;
+
+service InvokeSqrt {
+  rpc InvokeSqrt (Args) returns (Reply) {}
+}
+
+
+message Args {
+  int64 A = 1;
+  int64 B = 2;
+  int64 C = 3;
+}
+
+message Reply {
+  float Result = 1;
+}
