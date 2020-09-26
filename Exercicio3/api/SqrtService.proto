@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+option go_package = "github.com/example/path/gen;gen";
+
+package api;
+
+service SqrtService {
+  rpc Sqrt (Args) returns (Reply);
+}
+
+message Args {
+  int64 A = 1;
+  int64 B = 2;
+  int64 C = 3;
+}
+
+message Reply {
+  float Result = 1;
+}
