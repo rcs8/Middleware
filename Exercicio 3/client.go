@@ -9,7 +9,7 @@ type Client struct {
 	client *rpc.Client
 }
 
-func NewClient(address string) (*Client, error) {
+func NewClientRPC(address string) (*Client, error) {
 	client, err := rpc.Dial("tcp", address)
 
 	return &Client{
