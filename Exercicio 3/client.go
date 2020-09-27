@@ -1,105 +1,54 @@
 package main
 
 import (
-	"encoding/json"
-	"math/rand"
-	"net"
+	"net/rpc"
 	"time"
 )
 
 type Client struct {
-	conn    *net.Conn
-	encoder *json.Encoder
-	decoder *json.Decoder
+	client *rpc.Client
 }
 
-func NewClientTCP(address string) (*Client, error) {
-	conn, err := net.Dial("tcp", address)
-	if err != nil {
-		return nil, err
-	}
-
-	return CreateEncoders(conn), err
-}
-
-func NewClientUDP(address string) (*Client, error) {
-	addr, err := net.ResolveUDPAddr("udp", address)
-	if err != nil {
-		return nil, err
-	}
-
-	conn, err := net.DialUDP("udp", nil, addr)
-	if err != nil {
-		return nil, err
-	}
-
-	return CreateEncoders(conn), err
-}
-
-func CreateEncoders(conn net.Conn) *Client {
-	jsonEncoder := json.NewEncoder(conn)
-	jsonDecoder := json.NewDecoder(conn)
+func NewClient(address string) (*Client, error) {
+	client, err := rpc.Dial("tcp", address)
 
 	return &Client{
-		conn:    &conn,
-		encoder: jsonEncoder,
-		decoder: jsonDecoder,
-	}
+		client: client,
+	}, err
 }
 
-func (c *Client) MakeRequest() ([]float64, error) {
+func (c *Client) MakeRequest() []float64 {
 	var response Reply
-	var err error
 
 	message := PrepareArgs()
 
-	err = c.encoder.Encode(message)
+	c.client.Call("Sqrt.Sqrt", message, &response)
 
-	if err != nil {
-		return nil, err
-	}
-
-	err = c.decoder.Decode(&response)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return response.Result, err
+	return response.Result
 }
 
-func (c *Client) MakeRequestBenchmark() ([]float64, int64, error) {
+func (c *Client) MakeRequestBenchmark() ([]float64, int64) {
 	var response Reply
-	var err error
 
 	message := PrepareArgs()
 
 	startTime := time.Now()
-	err = c.encoder.Encode(message)
 
-	if err != nil {
-		return nil, 0, err
-	}
+	c.client.Call("Sqrt.Sqrt", message, &response)
 
-	err = c.decoder.Decode(&response)
 	totalTime := time.Now().Sub(startTime).Microseconds()
 
-	if err != nil {
-		return nil, 0, err
-	}
-
-	return response.Result, totalTime, err
+	return response.Result, totalTime
 }
 
 func PrepareArgs() Args {
-	rand.Seed(time.Now().UnixNano())
 	return Args{
-		A: rand.Intn(10) + 1,
-		B: rand.Intn(10) + 1,
-		C: rand.Intn(10) + 1,
+		A: 5,
+		B: 7,
+		C: 8,
 	}
 }
 
 func (c *Client) Close() {
-	(*c.conn).Close()
+	(*c.client).Close()
 }
