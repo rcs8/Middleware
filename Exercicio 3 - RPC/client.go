@@ -57,9 +57,9 @@ func (c *Client) MakeRequestBenchmark() ([]float64, int64, error) {
 
 func PrepareArgs() Args {
 	return Args{
-		A: 5,
-		B: 7,
-		C: 8,
+		A: 4,
+		B: 3,
+		C: -5,
 	}
 }
 
