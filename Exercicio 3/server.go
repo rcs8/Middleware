@@ -6,12 +6,12 @@ import (
 	"time"
 )
 
-type ServerTCP struct {
+type ServerRPC struct {
 	listener  *net.Listener
 	serverRPC *rpc.Server
 }
 
-func NewServerTCP(address string) (*ServerTCP, error) {
+func NewServerRPC(address string) (*ServerRPC, error) {
 	sqrt := new(SqrtRPC)
 
 	server := rpc.NewServer()
@@ -19,13 +19,13 @@ func NewServerTCP(address string) (*ServerTCP, error) {
 
 	ln, err := net.Listen("tcp", address)
 
-	return &ServerTCP{
+	return &ServerRPC{
 		listener:  &ln,
 		serverRPC: server,
 	}, err
 }
 
-func (s *ServerTCP) ListenTCP(exit NotifChan, exited NotifChan) {
+func (s *ServerRPC) ListenTCP(exit NotifChan, exited NotifChan) {
 	listener := (*s.listener).(*net.TCPListener)
 	for {
 		listener.SetDeadline(time.Now().Add(1 * time.Second))
@@ -34,6 +34,6 @@ func (s *ServerTCP) ListenTCP(exit NotifChan, exited NotifChan) {
 	}
 }
 
-func (s *ServerTCP) Close() {
+func (s *ServerRPC) Close() {
 	(*s.listener).Close()
 }
