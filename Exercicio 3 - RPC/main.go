@@ -16,37 +16,22 @@ type BenchResult struct {
 const address = "0.0.0.0:6666"
 
 func initServer(protocol string, exit NotifChan, exited NotifChan) {
-	if protocol == "TCP" {
-		server, err := NewServerTCP(address)
+	if protocol == "RPC" {
+		server, err := NewServerRPC(address)
 		if err != nil {
 			panic(err)
 		}
 		defer server.Close()
-		server.ListenTCP(exit, exited)
-	} else {
-		server, err := NewServerUDP(address)
-		if err != nil {
-			panic(err)
-		}
-		defer server.Close()
-		server.ListenUDP(exit, exited)
+		server.ListenRPC(exit, exited)
 	}
 }
 
 func initClient(protocol string) *Client {
-	if protocol == "TCP" {
-		client, err := NewClientTCP(address)
-		if err != nil {
-			panic(err)
-		}
-		return client
-	} else {
-		client, err := NewClientUDP(address)
-		if err != nil {
-			panic(err)
-		}
-		return client
+	client, err := NewClientRPC(address)
+	if err != nil {
+		panic(err)
 	}
+	return client
 }
 
 const iterations = 10000
@@ -56,7 +41,7 @@ func simpleClient(protocol string) {
 	defer client.Close()
 
 	for i := 0; i < iterations; i++ {
-		_, _ = client.MakeRequest()
+		_ = client.MakeRequest()
 	}
 }
 
@@ -67,7 +52,7 @@ func benchmarkClient(protocol string, result chan BenchResult) {
 	var sum int64 = 0
 	iterationTime := make([]int64, iterations)
 	for i := 0; i < iterations; i++ {
-		_, time, _ := client.MakeRequestBenchmark()
+		_, time := client.MakeRequestBenchmark()
 		sum += time
 		iterationTime[i] = time
 	}
@@ -106,7 +91,7 @@ func suite() (map[string][]BenchResult, float64, float64, float64) {
 	exit := make(NotifChan)
 	exited := make(NotifChan)
 
-	for _, protocol := range []string{"TCP", "UDP"} {
+	for _, protocol := range []string{"RPC"} {
 		results[protocol] = make([]BenchResult, 0)
 		for _, clientAmount := range ClientAmounts {
 			go initServer(protocol, exit, exited)

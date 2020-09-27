@@ -25,12 +25,19 @@ func NewServerRPC(address string) (*ServerRPC, error) {
 	}, err
 }
 
-func (s *ServerRPC) ListenTCP(exit NotifChan, exited NotifChan) {
+func (s *ServerRPC) ListenRPC(exit NotifChan, exited NotifChan) {
 	listener := (*s.listener).(*net.TCPListener)
 	for {
 		listener.SetDeadline(time.Now().Add(1 * time.Second))
 
 		s.serverRPC.Accept(listener)
+
+		_, stop := <-exit
+		if stop {
+			listener.Close()
+			exited <- true
+			return
+		}
 	}
 }
 
