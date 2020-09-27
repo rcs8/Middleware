@@ -41,7 +41,7 @@ func simpleClient(protocol string) {
 	defer client.Close()
 
 	for i := 0; i < iterations; i++ {
-		_ = client.MakeRequest()
+		_, _ = client.MakeRequest()
 	}
 }
 
@@ -52,7 +52,7 @@ func benchmarkClient(protocol string, result chan BenchResult) {
 	var sum int64 = 0
 	iterationTime := make([]int64, iterations)
 	for i := 0; i < iterations; i++ {
-		_, time := client.MakeRequestBenchmark()
+		_, time, _ := client.MakeRequestBenchmark()
 		sum += time
 		iterationTime[i] = time
 	}

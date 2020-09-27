@@ -12,33 +12,47 @@ type Client struct {
 func NewClientRPC(address string) (*Client, error) {
 	client, err := rpc.Dial("tcp", address)
 
+	if err != nil {
+		return nil, err
+	}
+
 	return &Client{
 		client: client,
 	}, err
 }
 
-func (c *Client) MakeRequest() []float64 {
+func (c *Client) MakeRequest() ([]float64, error) {
 	var response Reply
+	var err error
 
 	message := PrepareArgs()
 
-	c.client.Call("Sqrt.Sqrt", message, &response)
+	err = c.client.Call("Sqrt.Sqrt", message, &response)
 
-	return response.Result
+	if err != nil {
+		return nil, err
+	}
+
+	return response.Result, err
 }
 
-func (c *Client) MakeRequestBenchmark() ([]float64, int64) {
+func (c *Client) MakeRequestBenchmark() ([]float64, int64, error) {
 	var response Reply
+	var err error
 
 	message := PrepareArgs()
 
 	startTime := time.Now()
 
-	c.client.Call("Sqrt.Sqrt", message, &response)
+	err = c.client.Call("Sqrt.Sqrt", message, &response)
 
 	totalTime := time.Now().Sub(startTime).Microseconds()
 
-	return response.Result, totalTime
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return response.Result, totalTime, err
 }
 
 func PrepareArgs() Args {
