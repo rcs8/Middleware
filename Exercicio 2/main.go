@@ -64,15 +64,10 @@ func benchmarkClient(protocol string, result chan BenchResult) {
 	client := initClient(protocol)
 	defer client.Close()
 
-	var maxN int64 = math.MinInt64
-	var minN int64 = math.MaxInt64
-
 	var sum int64 = 0
 	iterationTime := make([]int64, iterations)
 	for i := 0; i < iterations; i++ {
 		_, time, _ := client.MakeRequestBenchmark()
-		maxN = int64(math.Max(float64(maxN), float64(time)))
-		minN = int64(math.Min(float64(minN), float64(time)))
 		sum += time
 		iterationTime[i] = time
 	}
