@@ -1,4 +1,4 @@
-package main
+package api
 
 import (
 	"math"
@@ -9,14 +9,16 @@ import (
 type Server struct {
 }
 
-func (s *Server) InvokeSqrt(ctx context.Context, args *Args) (*Reply, error) {
-	log.Printf("Receive new message")
+func (s *Server) Sqrt(ctx context.Context, args *Args) (*Reply, error) {
+	log.Printf("Received new message")
 	result := []float64{}
 	var a = float64(args.A)
 	var b = float64(args.B)
 	var c = float64(args.C)
 
 	deltaValue := CalculateDelta(a, b, c)
+
+	log.Printf("deltaValue: %f", deltaValue)
 
 	if deltaValue < 0 {
 		return &Reply{
