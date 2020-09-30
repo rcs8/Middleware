@@ -42,27 +42,28 @@ func initServer(protocol string, exit NotifChan, exited NotifChan) {
 }
 
 func initClient(protocol string) Client {
+	var client Client
+	var err error
 	switch protocol {
 	case "TCP":
-		client, err := NewClientTCP(address)
+		client, err = NewClientTCP(address)
 		if err != nil {
 			panic(err)
 		}
-		return client
 	case "UDP":
-		client, err := NewClientUDP(address)
+		client, err = NewClientUDP(address)
 		if err != nil {
 			panic(err)
 		}
-		return client
 	case "RPC":
-		client, err := NewClientRPC(address)
+		client, err = NewClientRPC(address)
 		if err != nil {
 			panic(err)
 		}
-		return client
+	default:
+		panic("panico")
 	}
-	return nil
+	return client
 }
 
 const iterations = 10000
