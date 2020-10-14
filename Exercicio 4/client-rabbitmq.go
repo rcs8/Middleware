@@ -21,7 +21,7 @@ func (c *ClientRabbitMQ) MakeRequest() ([]float64, error) {
 		return nil, err
 	}
 
-	message := Request{Op: "sqrt", args: c.prepareArgs()}
+	message := c.prepareArgs()
 
 	msgRequestBytes, err := json.Marshal(message)
 
@@ -55,7 +55,7 @@ func (c *ClientRabbitMQ) MakeRequestBenchmark() ([]float64, int64, error) {
 
 	startTime := time.Now()
 
-	message := Request{Op: "sqrt", args: c.prepareArgs()}
+	message := c.prepareArgs()
 
 	msgRequestBytes, err := json.Marshal(message)
 
@@ -88,7 +88,7 @@ func (c *ClientRabbitMQ) Close() {
 }
 
 func NewClientRabbitMQ(address string) (*ClientRabbitMQ, error) {
-	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/vhost")
+	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
 
 	if err != nil {
 		return nil, err
@@ -120,10 +120,11 @@ func NewClientRabbitMQ(address string) (*ClientRabbitMQ, error) {
 	}, err
 }
 
-func (c *ClientRabbitMQ) prepareArgs() Args {
-	return Args{
-		A: 4,
-		B: 3,
-		C: -5,
+func (c *ClientRabbitMQ) prepareArgs() Request {
+	return Request{
+		Op: "sqrt",
+		A:  4,
+		B:  3,
+		C:  -5,
 	}
 }

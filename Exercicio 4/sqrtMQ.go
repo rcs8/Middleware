@@ -6,7 +6,12 @@ func (s *SqrtRabbitMQ) Sqrt(req *Request) Reply {
 	var reply Reply
 
 	op := req.Op
-	args := req.args
+
+	args := Args{
+		A: req.A,
+		B: req.B,
+		C: req.C,
+	}
 
 	switch op {
 	case "sqrt":

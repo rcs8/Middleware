@@ -15,7 +15,7 @@ type ServerRabbitMQ struct {
 }
 
 func NewServerRabbitMQ(address string) (*ServerRabbitMQ, error) {
-	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/vhost")
+	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
 
 	if err != nil {
 		return nil, err

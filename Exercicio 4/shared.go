@@ -11,6 +11,8 @@ type Reply struct {
 }
 
 type Request struct {
-	Op   string
-	args Args
+	Op string
+	A  int
+	B  int
+	C  int
 }
