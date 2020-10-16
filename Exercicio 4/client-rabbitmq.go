@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"math/rand"
 	"time"
 
 	"github.com/streadway/amqp"
@@ -46,10 +47,23 @@ func (c *ClientRabbitMQ) MakeRequest() ([]float64, error) {
 	return response.Result, err
 }
 
+func randInt(min int, max int) int {
+	return min + rand.Intn(max-min)
+}
+
+func randomString(l int) string {
+	bytes := make([]byte, l)
+	for i := 0; i < l; i++ {
+		bytes[i] = byte(randInt(65, 90))
+	}
+	return string(bytes)
+}
+
 func (c *ClientRabbitMQ) MakeRequestBenchmark() ([]float64, int64, error) {
 	msgsFromServer, err := c.channel.Consume(c.replyQueue.Name, "", true, false, false, false, nil)
 
 	if err != nil {
+		panic(err) // debug
 		return nil, 0, err
 	}
 
@@ -63,7 +77,13 @@ func (c *ClientRabbitMQ) MakeRequestBenchmark() ([]float64, int64, error) {
 		return nil, 0, err
 	}
 
-	err = c.channel.Publish("", c.requestQueue.Name, false, false, amqp.Publishing{ContentType: "text/plain", Body: msgRequestBytes})
+	corrID := randomString(32)
+	err = c.channel.Publish("", c.requestQueue.Name, false, false, amqp.Publishing{
+		ContentType:   "text/plain",
+		CorrelationId: corrID,
+		ReplyTo:       "amq.rabbitmq.reply-to",
+		Body:          msgRequestBytes,
+	})
 
 	if err != nil {
 		return nil, 0, err
@@ -71,7 +91,12 @@ func (c *ClientRabbitMQ) MakeRequestBenchmark() ([]float64, int64, error) {
 
 	var response Reply
 
-	err = json.Unmarshal((<-msgsFromServer).Body, &response)
+	for msg := range msgsFromServer {
+		if corrID == msg.CorrelationId {
+			err = json.Unmarshal(msg.Body, &response)
+			break
+		}
+	}
 
 	totalTime := time.Now().Sub(startTime).Microseconds()
 
@@ -106,7 +131,7 @@ func NewClientRabbitMQ(address string) (*ClientRabbitMQ, error) {
 		return nil, err
 	}
 
-	replyQueue, err := ch.QueueDeclare("response", false, false, false, false, nil)
+	replyQueue, err := ch.QueueDeclare("amq.rabbitmq.reply-to", false, false, false, false, nil)
 
 	if err != nil {
 		return nil, err

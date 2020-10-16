@@ -10,7 +10,6 @@ type ServerRabbitMQ struct {
 	conn         *amqp.Connection
 	channel      *amqp.Channel
 	requestQueue *amqp.Queue
-	replyQueue   *amqp.Queue
 	sqrt         *SqrtRabbitMQ
 }
 
@@ -33,19 +32,12 @@ func NewServerRabbitMQ(address string) (*ServerRabbitMQ, error) {
 		return nil, err
 	}
 
-	replyQueue, err := ch.QueueDeclare("response", false, false, false, false, nil)
-
-	if err != nil {
-		return nil, err
-	}
-
 	sqrt := new(SqrtRabbitMQ)
 
 	return &ServerRabbitMQ{
 		conn:         conn,
 		channel:      ch,
 		requestQueue: &requestQueue,
-		replyQueue:   &replyQueue,
 		sqrt:         sqrt,
 	}, err
 }
@@ -95,7 +87,11 @@ func (s *ServerRabbitMQ) ListenRabbitMQ(exit NotifChan, exited NotifChan) {
 			continue
 		}
 
-		err = s.channel.Publish("", s.replyQueue.Name, false, false, amqp.Publishing{ContentType: "text/plain", Body: []byte(replyMsgBytes)})
+		err = s.channel.Publish("", d.ReplyTo, false, false, amqp.Publishing{
+			ContentType:   "text/plain",
+			CorrelationId: d.CorrelationId,
+			Body:          []byte(replyMsgBytes),
+		})
 
 		if err != nil {
 			_, stop := <-exit

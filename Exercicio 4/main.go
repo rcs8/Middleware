@@ -78,7 +78,7 @@ func initClient(protocol string) Client {
 	return client
 }
 
-const iterations = 10000
+const iterations = 10
 
 func simpleClient(protocol string, client Client) {
 	defer client.Close()
@@ -127,7 +127,7 @@ func benchmarkProtocolClients(protocol string, nClients int) BenchResult {
 	return <-result
 }
 
-var ClientAmounts = []int{1, 2, 5, 10}
+var ClientAmounts = []int{1}
 
 func suite() (map[string][]BenchResult, float64, float64, float64) {
 	results := make(map[string][]BenchResult)
@@ -138,7 +138,7 @@ func suite() (map[string][]BenchResult, float64, float64, float64) {
 	exit := make(NotifChan)
 	exited := make(NotifChan)
 
-	for _, protocol := range []string{"TCP", "UDP", "RPC", "RabbitMQ"} {
+	for _, protocol := range []string{"RabbitMQ"} {
 		results[protocol] = make([]BenchResult, 0)
 		for _, clientAmount := range ClientAmounts {
 			go initServer(protocol, exit, exited)
