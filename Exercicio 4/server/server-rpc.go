@@ -3,7 +3,6 @@ package main
 import (
 	"net"
 	"net/rpc"
-	"time"
 )
 
 type ServerRPC struct {
@@ -25,19 +24,9 @@ func NewServerRPC(address string) (*ServerRPC, error) {
 	}, err
 }
 
-func (s *ServerRPC) ListenRPC(exit NotifChan, exited NotifChan) {
-	listener := (*s.listener).(*net.TCPListener)
+func (s *ServerRPC) ListenRPC() {
 	for {
-		listener.SetDeadline(time.Now().Add(1 * time.Second))
-
-		s.serverRPC.Accept(listener)
-
-		_, stop := <-exit
-		if stop {
-			listener.Close()
-			exited <- true
-			return
-		}
+		s.serverRPC.Accept(*s.listener)
 	}
 }
 

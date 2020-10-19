@@ -14,7 +14,7 @@ type ServerRabbitMQ struct {
 }
 
 func NewServerRabbitMQ(address string) (*ServerRabbitMQ, error) {
-	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
+	conn, err := amqp.Dial("amqp://guest:guest@rabbitmq:5672/")
 
 	if err != nil {
 		return nil, err
@@ -39,52 +39,26 @@ func NewServerRabbitMQ(address string) (*ServerRabbitMQ, error) {
 		channel:      ch,
 		requestQueue: &requestQueue,
 		sqrt:         sqrt,
-	}, err
+	}, nil
 }
 
-func (s *ServerRabbitMQ) ListenRabbitMQ(exit NotifChan, exited NotifChan) {
+func (s *ServerRabbitMQ) ListenRabbitMQ() {
 	msgsFromClient, err := s.channel.Consume(s.requestQueue.Name, "", true, false, false, false, nil)
-
 	if err != nil {
-		_, stop := <-exit
-		if stop {
-			s.conn.Close()
-			s.channel.Close()
-			exited <- true
-			return
-		}
-		return
+		panic(err)
 	}
 
 	for d := range msgsFromClient {
 		msgRequest := Request{}
-
 		err := json.Unmarshal(d.Body, &msgRequest)
-
 		if err != nil {
-			_, stop := <-exit
-			if stop {
-				s.conn.Close()
-				s.channel.Close()
-				exited <- true
-				return
-			}
-			continue
+			panic(err)
 		}
 
 		reply := s.sqrt.Sqrt(&msgRequest)
-
 		replyMsgBytes, err := json.Marshal(reply)
-
 		if err != nil {
-			_, stop := <-exit
-			if stop {
-				s.conn.Close()
-				s.channel.Close()
-				exited <- true
-				return
-			}
-			continue
+			panic(err)
 		}
 
 		err = s.channel.Publish("", d.ReplyTo, false, false, amqp.Publishing{
@@ -92,16 +66,8 @@ func (s *ServerRabbitMQ) ListenRabbitMQ(exit NotifChan, exited NotifChan) {
 			CorrelationId: d.CorrelationId,
 			Body:          []byte(replyMsgBytes),
 		})
-
 		if err != nil {
-			_, stop := <-exit
-			if stop {
-				s.conn.Close()
-				s.channel.Close()
-				exited <- true
-				return
-			}
-			continue
+			panic(err)
 		}
 	}
 }

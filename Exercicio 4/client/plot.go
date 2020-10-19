@@ -9,7 +9,7 @@ import (
 )
 
 func createDataFile(results map[string][]BenchResult) {
-	f, err := os.Create("benchmark.dat")
+	f, err := os.Create("data/benchmark-" + os.Args[1] + ".dat")
 	if err != nil {
 		panic(err)
 	}

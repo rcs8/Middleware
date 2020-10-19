@@ -1,15 +1,64 @@
 version: '3'
 services:
-  # client:
-  #   container_name: client
-  #   build:
-  #     context: client/.
-  #   image: client
-  #   restart: always
-  #   ports:
-  #   - 6001:6000
-  #   depends_on:
-  #   - rabbitmq
+  client-tcp:
+    container_name: client-tcp
+    build: client/.
+    image: client-tcp
+    command: ["/bin/sh", "-c", "go run *.go TCP"]
+    volumes:
+      - ./client/data:/middleware/data
+    depends_on:
+    - server-tcp
+  client-udp:
+    container_name: client-udp
+    build: client/.
+    image: client-udp
+    command: ["/bin/sh", "-c", "go run *.go UDP"]
+    volumes:
+      - ./client/data:/middleware/data
+    depends_on:
+    - server-udp
+  client-rpc:
+    container_name: client-rpc
+    build: client/.
+    image: client-rpc
+    command: ["/bin/sh", "-c", "go run *.go RPC"]
+    volumes:
+      - ./client/data:/middleware/data
+    depends_on:
+    - server-rpc
+  client-rabbitmq:
+    container_name: client-rabbitmq
+    build: client/.
+    image: client-rabbitmq
+    command: ["/bin/sh", "-c", "go run *.go RabbitMQ"]
+    volumes:
+      - ./client/data:/middleware/data
+    depends_on:
+    - server-rabbitmq
+    - rabbitmq
+  server-tcp:
+    container_name: server-tcp
+    build: server/.
+    image: server-tcp
+    command: ["/bin/sh", "-c", "go run *.go TCP"]
+  server-udp:
+    container_name: server-udp
+    build: server/.
+    image: server-udp
+    command: ["/bin/sh", "-c", "go run *.go UDP"]
+  server-rpc:
+    container_name: server-rpc
+    build: server/.
+    image: server-rpc
+    command: ["/bin/sh", "-c", "go run *.go RPC"]
+  server-rabbitmq:
+    container_name: server-rabbitmq
+    build: server/.
+    image: server-rabbitmq
+    command: ["/bin/sh", "-c", "go run *.go RabbitMQ"]
+    depends_on:
+    - rabbitmq
   rabbitmq:
     container_name: rabbitmq
     image: rabbitmq:management-alpine

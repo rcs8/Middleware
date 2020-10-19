@@ -1,4 +1,4 @@
-module ex2
+module client
 
 go 1.13
 

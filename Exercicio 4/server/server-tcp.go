@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
-	"time"
 )
 
 type ServerTCP struct {
@@ -22,19 +21,11 @@ func NewServerTCP(address string) (*ServerTCP, error) {
 	}, err
 }
 
-func (s *ServerTCP) ListenTCP(exit NotifChan, exited NotifChan) {
-	listener := (*s.listener).(*net.TCPListener)
+func (s *ServerTCP) ListenTCP() {
 	for {
-		listener.SetDeadline(time.Now().Add(1 * time.Second))
-		conn, err := listener.Accept()
+		conn, err := (*s.listener).Accept()
 		if err != nil {
-			_, stop := <-exit
-			if stop {
-				listener.Close()
-				exited <- true
-				return
-			}
-			continue
+			panic(err)
 		}
 
 		go HandleTCP(conn)

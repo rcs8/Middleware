@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
-	"time"
 	"unsafe"
 )
 
@@ -28,21 +27,13 @@ func NewServerUDP(port string) (*ServerUDP, error) {
 	}, err
 }
 
-func (s *ServerUDP) ListenUDP(exit NotifChan, exited NotifChan) {
+func (s *ServerUDP) ListenUDP() {
 	var args Args
-	conn := *s.conn
 	for {
-		conn.SetDeadline(time.Now().Add(1 * time.Second))
 		msgFromClient := make([]byte, unsafe.Sizeof(args))
-		n, addr, err := conn.ReadFromUDP(msgFromClient)
+		n, addr, err := (*s.conn).ReadFromUDP(msgFromClient)
 		if err != nil {
-			_, stop := <-exit
-			if stop {
-				conn.Close()
-				exited <- true
-				return
-			}
-			continue
+			panic(err)
 		}
 
 		go HandleUDP(s.conn, msgFromClient, n, addr)

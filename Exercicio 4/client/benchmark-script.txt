@@ -1,0 +1,14 @@
+#!/usr/bin/env gnuplot -c
+
+set terminal png size 600,500
+set title 'UDP x TCP x RPC'
+set ylabel 'Time in µs'
+set xlabel 'Number of clients'
+set grid ytics
+set errorbars lc black lw 1.5
+set style fill solid 1 noborder
+set xtics format '' nomirror
+set output 'data/benchmark.png'
+set style histogram gap 1
+set yrange[ARG1:ARG2]
+plot 'data/benchmark-TCP.dat' u 3:xtic(1) w hist ti 'TCP' lc rgb '#4A71C2', 'data/benchmark-UDP.dat' u 3:xtic(1) w hist ti 'UDP' lc rgb '#6FAE4E', 'data/benchmark-RPC.dat' u 3:xtic(1) w hist ti 'RPC' lc rgb '#00FF00', 'data/benchmark-RabbitMQ.dat' u 3:xtic(1) w hist ti 'RabbitMQ' lc rgb '#0000FF'

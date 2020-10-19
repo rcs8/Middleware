@@ -13,38 +13,8 @@ type ClientRabbitMQ struct {
 	channel      *amqp.Channel
 	requestQueue *amqp.Queue
 	replyQueue   *amqp.Queue
-}
-
-func (c *ClientRabbitMQ) MakeRequest() ([]float64, error) {
-	msgsFromServer, err := c.channel.Consume(c.replyQueue.Name, "", true, false, false, false, nil)
-
-	if err != nil {
-		return nil, err
-	}
-
-	message := c.prepareArgs()
-
-	msgRequestBytes, err := json.Marshal(message)
-
-	if err != nil {
-		return nil, err
-	}
-
-	err = c.channel.Publish("", c.requestQueue.Name, false, false, amqp.Publishing{ContentType: "text/plain", Body: msgRequestBytes})
-
-	if err != nil {
-		return nil, err
-	}
-
-	var response Reply
-
-	err = json.Unmarshal((<-msgsFromServer).Body, &response)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return response.Result, err
+	stop         chan bool
+	replies      map[string]chan []byte
 }
 
 func randInt(min int, max int) int {
@@ -59,16 +29,42 @@ func randomString(l int) string {
 	return string(bytes)
 }
 
-func (c *ClientRabbitMQ) MakeRequestBenchmark() ([]float64, int64, error) {
-	msgsFromServer, err := c.channel.Consume(c.replyQueue.Name, "", true, false, false, false, nil)
+func (c *ClientRabbitMQ) MakeRequest() ([]float64, error) {
+	message := c.prepareArgs()
+
+	msgRequestBytes, err := json.Marshal(message)
 
 	if err != nil {
-		panic(err) // debug
-		return nil, 0, err
+		return nil, err
 	}
 
-	startTime := time.Now()
+	corrID := randomString(32)
+	c.replies[corrID] = make(chan []byte)
 
+	err = c.channel.Publish("", c.requestQueue.Name, false, false, amqp.Publishing{
+		ContentType:   "text/plain",
+		CorrelationId: corrID,
+		ReplyTo:       "amq.rabbitmq.reply-to",
+		Body:          msgRequestBytes,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	var response Reply
+
+	body := <-c.replies[corrID]
+
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.Result, err
+}
+
+func (c *ClientRabbitMQ) MakeRequestBenchmark() ([]float64, int64, error) {
 	message := c.prepareArgs()
 
 	msgRequestBytes, err := json.Marshal(message)
@@ -78,6 +74,9 @@ func (c *ClientRabbitMQ) MakeRequestBenchmark() ([]float64, int64, error) {
 	}
 
 	corrID := randomString(32)
+	c.replies[corrID] = make(chan []byte)
+
+	startTime := time.Now()
 	err = c.channel.Publish("", c.requestQueue.Name, false, false, amqp.Publishing{
 		ContentType:   "text/plain",
 		CorrelationId: corrID,
@@ -91,15 +90,10 @@ func (c *ClientRabbitMQ) MakeRequestBenchmark() ([]float64, int64, error) {
 
 	var response Reply
 
-	for msg := range msgsFromServer {
-		if corrID == msg.CorrelationId {
-			err = json.Unmarshal(msg.Body, &response)
-			break
-		}
-	}
-
+	body := <-c.replies[corrID]
 	totalTime := time.Now().Sub(startTime).Microseconds()
 
+	err = json.Unmarshal(body, &response)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -107,13 +101,29 @@ func (c *ClientRabbitMQ) MakeRequestBenchmark() ([]float64, int64, error) {
 	return response.Result, totalTime, err
 }
 
+func (c *ClientRabbitMQ) listen() {
+	msgsFromServer, err := c.channel.Consume(c.replyQueue.Name, "", true, false, false, false, nil)
+	if err != nil {
+		panic(err)
+	}
+	for {
+		select {
+		case <-c.stop:
+			return
+		case msg := <-msgsFromServer:
+			c.replies[msg.CorrelationId] <- msg.Body
+		}
+	}
+}
+
 func (c *ClientRabbitMQ) Close() {
+	close(c.stop)
 	(*c.conn).Close()
 	(*c.channel).Close()
 }
 
 func NewClientRabbitMQ(address string) (*ClientRabbitMQ, error) {
-	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/")
+	conn, err := amqp.Dial("amqp://guest:guest@rabbitmq:5672/")
 
 	if err != nil {
 		return nil, err
@@ -137,12 +147,18 @@ func NewClientRabbitMQ(address string) (*ClientRabbitMQ, error) {
 		return nil, err
 	}
 
-	return &ClientRabbitMQ{
+	client := &ClientRabbitMQ{
 		conn:         conn,
 		channel:      ch,
 		requestQueue: &requestQueue,
 		replyQueue:   &replyQueue,
-	}, err
+		stop:         make(chan bool),
+		replies:      make(map[string]chan []byte),
+	}
+
+	go client.listen()
+
+	return client, nil
 }
 
 func (c *ClientRabbitMQ) prepareArgs() Request {
