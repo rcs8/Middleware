@@ -19,7 +19,7 @@ func newCRHTCP() (*crhTCP, error) {
 	return &crhTCP{
 		conn:       conn,
 		serverHost: "0.0.0.0",
-		serverPort: 6666,
+		serverPort: 8080,
 	}, nil
 }
 

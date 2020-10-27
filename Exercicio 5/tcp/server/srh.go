@@ -20,21 +20,21 @@ func newSRHTCP() (*srhTCP, error) {
 	}, err
 }
 
-func (srh *srhTCP) Receive() []byte {
-	response := make([]byte, 64)
+func (srh *srhTCP) Receive() {
+	request := make([]byte, 64)
 	fmt.Println("listening tcp server")
 	listener := (*srh.listener).(*net.TCPListener)
 	defer listener.Close()
 	for {
-		listener.SetDeadline(time.Now().Add(5 * time.Second))
+		listener.SetDeadline(time.Now().Add(10 * time.Second))
 		conn, err := listener.Accept()
 		if err != nil {
 			panic(err)
 		}
 
-		conn.Read(response)
+		conn.Read(request)
 
-		go HandleTCP(*srh, conn, response)
+		go HandleTCP(*srh, conn, request)
 	}
 }
 

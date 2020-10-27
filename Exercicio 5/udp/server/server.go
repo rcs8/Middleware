@@ -6,11 +6,11 @@ import (
 )
 
 func main() {
-	srhTCP, err := newSRHTCP()
+	srhUDP, err := newSRHUDP()
 	if err != nil {
 		panic(err)
 	}
-	srhTCP.Receive()
+	srhUDP.Receive()
 }
 
 func responseMessage() []byte {
@@ -18,10 +18,10 @@ func responseMessage() []byte {
 	return []byte(message)
 }
 
-func HandleTCP(srh srhTCP, conn net.Conn, message []byte) {
+func HandleUDP(srh srhUDP, conn net.UDPConn, message []byte, addr *net.UDPAddr) {
 	s := string(message[:])
 	fmt.Print(string(s), "from client\n")
 	var msgToClient []byte = responseMessage()
 
-	srh.SendTCP(msgToClient, conn)
+	srh.SendUDP(msgToClient, conn, addr)
 }
