@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"net"
-	"time"
 )
 
 type srhTCP struct {
@@ -26,7 +25,6 @@ func (srh *srhTCP) Receive() {
 	listener := (*srh.listener).(*net.TCPListener)
 	defer listener.Close()
 	for {
-		listener.SetDeadline(time.Now().Add(10 * time.Second))
 		conn, err := listener.Accept()
 		if err != nil {
 			panic(err)

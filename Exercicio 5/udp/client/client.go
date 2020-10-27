@@ -9,10 +9,6 @@ import (
 )
 
 func main() {
-	runUDPClient()
-}
-
-func runUDPClient() {
 	crhUDP, err := newcrhUDP()
 	if err != nil {
 		panic(err)

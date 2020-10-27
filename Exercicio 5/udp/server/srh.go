@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"net"
-	"time"
 )
 
 type srhUDP struct {
@@ -31,7 +30,6 @@ func (srh *srhUDP) Receive() {
 	fmt.Println("listening UDP server")
 	defer conn.Close()
 	for {
-		conn.SetDeadline(time.Now().Add(10 * time.Second))
 		n, addr, err := conn.ReadFromUDP(request)
 		if err != nil {
 			panic(err)

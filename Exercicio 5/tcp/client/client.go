@@ -9,10 +9,6 @@ import (
 )
 
 func main() {
-	runTCPClient()
-}
-
-func runTCPClient() {
 	crhTCP, err := newCRHTCP()
 	if err != nil {
 		panic(err)

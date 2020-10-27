@@ -40,31 +40,3 @@ func (crh crhTCP) SendReceive(msgToServer string) []byte {
 
 	return buffer
 }
-
-// func NewClientUDP(address string) (*crhTCP, error) {
-// 	addr, err := net.ResolveUDPAddr("udp", address)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	conn, err := net.DialUDP("udp", nil, addr)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	return CreateEncoders(conn, "udp"), err
-// }
-
-// func CreateEncoders(conn net.Conn, protocol string) *crhTCP {
-// 	jsonEncoder := json.NewEncoder(conn)
-// 	jsonDecoder := json.NewDecoder(conn)
-
-// 	return &crhTCP{
-// 		conn:       &conn,
-// 		encoder:    jsonEncoder,
-// 		decoder:    jsonDecoder,
-// 		serverHost: "0.0.0.0",
-// 		serverPort: 6666,
-// 		protocol:   protocol,
-// 	}
-// }
